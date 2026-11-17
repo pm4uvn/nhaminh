@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-flash-lite-latest";
 const MAX_QUESTION_LENGTH = 500;
 
 const SYSTEM_PROMPT_HEADER = `Bạn là trợ lý của ứng dụng "Nhà Mình", giúp một người đang xây/sửa nhà lần đầu, không có chuyên môn xây dựng, hiểu rõ tình hình ngôi nhà của chính họ.
