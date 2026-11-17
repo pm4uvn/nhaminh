@@ -51,6 +51,7 @@ interface Store extends AppState {
   setStageStatus: (stageId: string, status: Stage["status"]) => void;
   setStageNote: (stageId: string, note: string) => void;
   confirmStagePayment: (stageId: string) => void;
+  toggleAskedQuestion: (stageId: string, questionId: string) => void;
 
   addJournalEntry: (e: Omit<JournalEntry, "id">) => void;
   setIssueStatus: (id: string, status: IssueStatus, note?: string) => void;
@@ -197,6 +198,18 @@ export const useAppStore = create<Store>()(
           stages: get().stages.map((s) =>
             s.id === stageId ? { ...s, paymentConfirmed: true } : s
           ),
+        }),
+
+      toggleAskedQuestion: (stageId, questionId) =>
+        set({
+          stages: get().stages.map((s) => {
+            if (s.id !== stageId) return s;
+            const current = s.askedQuestionIds ?? [];
+            const askedQuestionIds = current.includes(questionId)
+              ? current.filter((id) => id !== questionId)
+              : [...current, questionId];
+            return { ...s, askedQuestionIds };
+          }),
         }),
 
       addJournalEntry: (e) =>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, HelpCircle } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Input, FieldLabel, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import { useAppStore } from "@/lib/store";
 import { Stage, StageStatus } from "@/lib/types";
 import { stageProgress } from "@/lib/calculations";
 import { STAGE_STATUS_META } from "@/lib/meta";
+import { getStageQuestions } from "@/lib/stage-questions";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { TermText } from "@/components/glossary/TermText";
@@ -24,6 +25,7 @@ export function StageDetailSheet({
   const addChecklistItem = useAppStore((s) => s.addChecklistItem);
   const setStageStatus = useAppStore((s) => s.setStageStatus);
   const setStageNote = useAppStore((s) => s.setStageNote);
+  const toggleAskedQuestion = useAppStore((s) => s.toggleAskedQuestion);
 
   const [newItem, setNewItem] = useState("");
   const [note, setNote] = useState(stage?.note ?? "");
@@ -31,6 +33,8 @@ export function StageDetailSheet({
   if (!stage) return null;
   const progress = stageProgress(stage);
   const remaining = stage.checklist.filter((c) => !c.done).length;
+  const questions = getStageQuestions(stage.order);
+  const askedIds = stage.askedQuestionIds ?? [];
 
   const statusOptions: StageStatus[] = ["todo", "doing", "done"];
 
@@ -155,6 +159,61 @@ export function StageDetailSheet({
             </Button>
           </div>
         </div>
+
+        {questions.length > 0 && (
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <HelpCircle size={15} className="text-terracotta" />
+              <FieldLabel>Câu hỏi nên hỏi thầu</FieldLabel>
+            </div>
+            <p className="text-xs text-text-secondary mb-2 -mt-1">
+              Hỏi trước khi ký nhận hoặc thanh toán cho giai đoạn này.
+            </p>
+            <div className="space-y-1">
+              {questions.map((q) => {
+                const asked = askedIds.includes(q.id);
+                return (
+                  <div key={q.id} className="w-full flex items-center gap-3 py-2 text-left">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleAskedQuestion(stage.id, q.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleAskedQuestion(stage.id, q.id);
+                        }
+                      }}
+                      className={cn(
+                        "h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors cursor-pointer",
+                        asked ? "bg-terracotta border-terracotta text-white" : "border-border"
+                      )}
+                    >
+                      {asked && <Check size={12} />}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleAskedQuestion(stage.id, q.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleAskedQuestion(stage.id, q.id);
+                        }
+                      }}
+                      className={cn(
+                        "text-[15px] flex-1 cursor-pointer",
+                        asked && "text-text-secondary"
+                      )}
+                    >
+                      {q.text}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <FieldLabel optional>Ghi chú</FieldLabel>

@@ -55,6 +55,8 @@ export interface Stage {
   checklist: ChecklistItem[];
   /** Người dùng đã xác nhận thanh toán đợt gắn với giai đoạn này */
   paymentConfirmed?: boolean;
+  /** id của các câu hỏi gợi ý (xem lib/stage-questions.ts) đã hỏi thầu */
+  askedQuestionIds?: string[];
 }
 
 export type JournalEntryType = "update" | "note" | "issue" | "decision";

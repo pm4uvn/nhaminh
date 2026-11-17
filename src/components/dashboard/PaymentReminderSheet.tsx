@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useAppStore } from "@/lib/store";
 import { PaymentReminder } from "@/lib/payment-schedule";
+import { getStageQuestions } from "@/lib/stage-questions";
 import { formatCurrency } from "@/lib/format";
 import { notify } from "@/lib/toast";
-import { Check } from "lucide-react";
+import { Check, HelpCircle } from "lucide-react";
 
 export function PaymentReminderSheet({
   open,
@@ -29,7 +30,9 @@ export function PaymentReminderSheet({
         </p>
 
         <div className="space-y-3">
-          {reminders.map((r) => (
+          {reminders.map((r) => {
+            const topQuestions = getStageQuestions(r.stage.order).slice(0, 2);
+            return (
             <div key={r.stage.id} className="rounded-2xl border border-border p-4">
               <div className="flex items-start justify-between gap-2 mb-1.5">
                 <p className="font-medium text-[15px]">{r.stage.name}</p>
@@ -46,6 +49,22 @@ export function PaymentReminderSheet({
                   ~{formatCurrency(r.amount)}
                 </span>
               </div>
+
+              {topQuestions.length > 0 && (
+                <div className="rounded-xl bg-terracotta/10 px-3 py-2.5 mb-3">
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-terracotta mb-1.5">
+                    <HelpCircle size={13} /> Nên hỏi thầu trước khi thanh toán
+                  </p>
+                  <ul className="space-y-1">
+                    {topQuestions.map((q) => (
+                      <li key={q.id} className="text-xs text-text-primary leading-relaxed">
+                        • {q.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <Button
                 variant="outline"
                 size="sm"
@@ -58,7 +77,8 @@ export function PaymentReminderSheet({
                 <Check size={15} /> Đã thanh toán đợt này
               </Button>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <p className="text-xs text-text-secondary leading-relaxed">
