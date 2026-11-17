@@ -134,6 +134,31 @@ export function budgetPace(stages: Stage[], budget: number, expenses: Expense[])
   return { level: "ok", progress, spentPercent, gap, projectedTotal, projectedOverrun };
 }
 
+export interface MonthlyTotal {
+  month: string; // "YYYY-MM"
+  label: string; // "Tháng 11/2026"
+  total: number;
+}
+
+/**
+ * Tổng chi phí theo từng tháng dương lịch (dựa vào `expense.date`), tính lùi
+ * từ tháng hiện tại, dùng để so sánh "tháng này chi nhiều hơn tháng trước
+ * không".
+ */
+export function monthlyExpenseTotals(expenses: Expense[], monthsBack = 3): MonthlyTotal[] {
+  const now = new Date();
+  const result: MonthlyTotal[] = [];
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const total = expenses
+      .filter((e) => e.date.slice(0, 7) === month)
+      .reduce((sum, e) => sum + e.amount, 0);
+    result.push({ month, label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`, total });
+  }
+  return result;
+}
+
 export function expenseCategoryTotal(
   expenses: Expense[],
   category: Expense["category"]
