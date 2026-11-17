@@ -15,6 +15,7 @@ import {
 } from "@/lib/calculations";
 import { formatDate, formatWeeksRemaining } from "@/lib/format";
 import { CalendarClock, PartyPopper } from "lucide-react";
+import { ShareProgressButton } from "@/components/progress/ShareProgressButton";
 
 export default function ProgressPage() {
   const stages = useAppStore((s) => s.stages);
@@ -29,7 +30,7 @@ export default function ProgressPage() {
 
   return (
     <div className="pb-6">
-      <PageHeader title="Tiến độ xây nhà" />
+      <PageHeader title="Tiến độ xây nhà" action={<ShareProgressButton />} />
 
       <div className="px-5 space-y-5">
         <Card className="p-5">
