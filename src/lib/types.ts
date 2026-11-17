@@ -1,5 +1,11 @@
 export type ProjectType = "new" | "renovate" | "interior";
 
+export interface HomeLocation {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
 export interface HomeProfile {
   id: string;
   name: string;
@@ -7,6 +13,7 @@ export interface HomeProfile {
   budget: number;
   startDate?: string; // ISO date
   createdAt: string; // ISO date
+  location?: HomeLocation;
 }
 
 export type ExpenseCategory =

@@ -15,6 +15,11 @@ export const mockHomeProfile: HomeProfile = {
   budget: 1_500_000_000,
   startDate: "2026-07-01",
   createdAt: "2026-07-01",
+  location: {
+    lat: 10.8231,
+    lng: 106.6297,
+    address: "Quận Bình Thạnh, Thành phố Hồ Chí Minh",
+  },
 };
 
 export const mockExpenses: Expense[] = [

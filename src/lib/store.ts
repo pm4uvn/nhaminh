@@ -5,6 +5,7 @@ import {
   ChecklistItem,
   DocumentRecord,
   Expense,
+  HomeLocation,
   HomeProfile,
   IssueStatus,
   JournalEntry,
@@ -36,6 +37,7 @@ interface Store extends AppState {
   }) => void;
   loadDemo: () => void;
   resetDemo: () => void;
+  setHomeLocation: (location: HomeLocation) => void;
 
   addExpense: (e: Omit<Expense, "id">) => void;
   updateExpense: (id: string, e: Partial<Expense>) => void;
@@ -117,6 +119,12 @@ export const useAppStore = create<Store>()(
 
       resetDemo: () => {
         set({ ...emptyState });
+      },
+
+      setHomeLocation: (location) => {
+        const profile = get().homeProfile;
+        if (!profile) return;
+        set({ homeProfile: { ...profile, location } });
       },
 
       addExpense: (e) =>

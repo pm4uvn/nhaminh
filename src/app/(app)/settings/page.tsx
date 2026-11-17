@@ -9,8 +9,9 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppStore } from "@/lib/store";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { notify } from "@/lib/toast";
-import { RotateCcw, Home, Info, BookOpenText, ChevronRight } from "lucide-react";
+import { RotateCcw, Home, Info, BookOpenText, ChevronRight, MapPin } from "lucide-react";
 import { GlossaryListSheet } from "@/components/glossary/GlossaryListSheet";
+import { LocationPickerSheet } from "@/components/map/LocationPickerSheet";
 
 const TYPE_LABEL: Record<string, string> = {
   new: "Xây nhà mới",
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const loadDemo = useAppStore((s) => s.loadDemo);
   const [confirmReset, setConfirmReset] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
 
   return (
     <div className="pb-6">
@@ -58,6 +60,25 @@ export default function SettingsPage() {
             )}
           </div>
         </Card>
+
+        <button
+          onClick={() => setLocationOpen(true)}
+          className="w-full flex items-center gap-3 bg-surface border border-border rounded-2xl p-4 text-left"
+        >
+          <div className="h-11 w-11 rounded-2xl bg-primary-light text-primary-dark flex items-center justify-center shrink-0">
+            <MapPin size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[15px]">Vị trí ngôi nhà</p>
+            <p className="text-xs text-text-secondary truncate">
+              {homeProfile?.location?.address ??
+                (homeProfile?.location
+                  ? `${homeProfile.location.lat.toFixed(4)}, ${homeProfile.location.lng.toFixed(4)}`
+                  : "Chưa chọn — thêm để xem dự báo thời tiết")}
+            </p>
+          </div>
+          <ChevronRight size={18} className="text-text-secondary shrink-0" />
+        </button>
 
         <button
           onClick={() => setGlossaryOpen(true)}
@@ -113,6 +134,7 @@ export default function SettingsPage() {
       />
 
       <GlossaryListSheet open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
+      <LocationPickerSheet open={locationOpen} onClose={() => setLocationOpen(false)} />
     </div>
   );
 }
