@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/format";
 import { JournalEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Share2 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
+import { composeBeforeAfterImage, shareOrDownloadImage } from "@/lib/export-before-after";
+import { notify } from "@/lib/toast";
 
 export function BeforeAfterSheet({
   open,
@@ -18,11 +21,27 @@ export function BeforeAfterSheet({
   onClose: () => void;
   entries: JournalEntry[];
 }) {
+  const homeName = useAppStore((s) => s.homeProfile?.name) ?? "Nhà của tôi";
   const [beforeId, setBeforeId] = useState<string | null>(null);
   const [afterId, setAfterId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const before = entries.find((e) => e.id === beforeId);
   const after = entries.find((e) => e.id === afterId);
+
+  const handleShare = async () => {
+    if (!before || !after || exporting) return;
+    setExporting(true);
+    try {
+      const blob = await composeBeforeAfterImage(before, after, homeName);
+      const result = await shareOrDownloadImage(blob, "truoc-va-sau.png");
+      notify.success(result === "shared" ? "Đã chia sẻ!" : "Đã tải ảnh xuống, giờ bạn có thể chia sẻ");
+    } catch {
+      notify.error("Không tạo được ảnh, bạn thử lại nhé.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const select = (id: string) => {
     if (beforeId === id) return setBeforeId(null);
@@ -52,9 +71,21 @@ export function BeforeAfterSheet({
                 <p className="text-xs font-medium text-center">Sau · {formatDate(after.date)}</p>
               </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={() => { setBeforeId(null); setAfterId(null); }}>
-              Chọn lại ảnh khác
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setBeforeId(null);
+                  setAfterId(null);
+                }}
+              >
+                Chọn lại ảnh khác
+              </Button>
+              <Button className="flex-1" disabled={exporting} onClick={handleShare}>
+                <Share2 size={16} /> {exporting ? "Đang tạo ảnh..." : "Chia sẻ"}
+              </Button>
+            </div>
           </div>
         ) : (
           <>
