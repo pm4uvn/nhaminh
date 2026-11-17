@@ -91,9 +91,12 @@ const PROJECTED_OVERRUN_THRESHOLD_RATIO = 0.05; // 5% ngân sách
 
 /**
  * So sánh % ngân sách đã chi với % tiến độ thi công để phát hiện sớm nguy cơ
- * vượt ngân sách. Cần tiến độ tối thiểu 5% để tránh báo động giả ở giai đoạn
- * đầu, khi các khoản cọc (đất, vật liệu, nội thất...) thường được trả trước
- * khi tiến độ thi công vật lý chưa thể hiện rõ.
+ * vượt ngân sách. Việc "đã chi >= 100% ngân sách" luôn được báo ngay bất kể
+ * tiến độ, vì đây là tín hiệu nghiêm trọng không được phép bị che bởi
+ * ngưỡng "chưa đủ dữ liệu". Chỉ khi CHƯA vượt ngân sách, mới cần tiến độ tối
+ * thiểu 5% để tránh báo động giả ở giai đoạn đầu, khi các khoản cọc (đất,
+ * vật liệu, nội thất...) thường được trả trước khi tiến độ thi công vật lý
+ * chưa thể hiện rõ.
  */
 export function budgetPace(stages: Stage[], budget: number, expenses: Expense[]): BudgetPace {
   const progress = overallProgress(stages);
@@ -104,24 +107,22 @@ export function budgetPace(stages: Stage[], budget: number, expenses: Expense[])
   }
 
   const spentPercent = (paid / budget) * 100;
-
-  if (progress < 5) {
-    return {
-      level: "insufficient_data",
-      progress,
-      spentPercent,
-      gap: spentPercent - progress,
-    };
-  }
-
-  const projectedTotal = paid / (progress / 100);
-  const projectedOverrun = projectedTotal - budget;
   const gap = spentPercent - progress;
+  const projectedTotal = progress > 0 ? paid / (progress / 100) : undefined;
+  const projectedOverrun = projectedTotal !== undefined ? projectedTotal - budget : undefined;
 
   if (spentPercent >= 100) {
     return { level: "over_budget", progress, spentPercent, gap, projectedTotal, projectedOverrun };
   }
-  if (gap >= AHEAD_GAP_THRESHOLD || projectedOverrun > budget * PROJECTED_OVERRUN_THRESHOLD_RATIO) {
+
+  if (progress < 5) {
+    return { level: "insufficient_data", progress, spentPercent, gap };
+  }
+
+  if (
+    gap >= AHEAD_GAP_THRESHOLD ||
+    (projectedOverrun !== undefined && projectedOverrun > budget * PROJECTED_OVERRUN_THRESHOLD_RATIO)
+  ) {
     return {
       level: "ahead_spending",
       progress,

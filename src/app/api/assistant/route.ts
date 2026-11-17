@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
 
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 const MAX_QUESTION_LENGTH = 500;
+const RATE_LIMIT = 20; // lượt / cửa sổ
+const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 phút
 
 const SYSTEM_PROMPT_HEADER = `Bạn là trợ lý của ứng dụng "Nhà Mình", giúp một người đang xây/sửa nhà lần đầu, không có chuyên môn xây dựng, hiểu rõ tình hình ngôi nhà của chính họ.
 
@@ -16,6 +19,18 @@ DỮ LIỆU DỰ ÁN:
 `;
 
 export async function POST(req: NextRequest) {
+  const rate = checkRateLimit(getClientKey(req), RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "rate_limited",
+        message: `Bạn hỏi hơi nhanh, thử lại sau ${rate.retryAfterSeconds} giây nhé.`,
+      },
+      { status: 429 }
+    );
+  }
+
   let body: { question?: string; context?: string; apiKey?: string };
   try {
     body = await req.json();

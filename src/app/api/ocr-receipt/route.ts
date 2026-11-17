@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
 
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000; // ~4.5MB ảnh gốc, đủ cho ảnh chụp hóa đơn
+const RATE_LIMIT = 10; // lượt / cửa sổ — ảnh tốn chi phí hơn câu hỏi text
+const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 phút
 
 const PROMPT = `Đây là ảnh hóa đơn hoặc biên lai chi phí xây nhà. Đọc và trả về CHÍNH XÁC một đối tượng JSON, không kèm giải thích, không markdown, theo đúng định dạng:
 {"amount": <số tiền tổng cộng, là số nguyên VNĐ, không có dấu chấm/phẩy/ký hiệu>, "description": "<mô tả ngắn gọn, ví dụ tên cửa hàng hoặc mặt hàng chính, tối đa 8 từ>"}
@@ -22,6 +25,17 @@ function extractJson(text: string): { amount: number | null; description: string
 }
 
 export async function POST(req: NextRequest) {
+  const rate = checkRateLimit(getClientKey(req), RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `Bạn quét hơi nhanh, thử lại sau ${rate.retryAfterSeconds} giây nhé.`,
+      },
+      { status: 429 }
+    );
+  }
+
   let body: { imageBase64?: string; mimeType?: string; apiKey?: string };
   try {
     body = await req.json();

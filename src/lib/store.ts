@@ -17,6 +17,7 @@ import {
   Stage,
   Task,
 } from "./types";
+import { expenseCategoryForStageOrder } from "./payment-schedule";
 import {
   mockContacts,
   mockDocuments,
@@ -53,7 +54,7 @@ interface Store extends AppState {
   addChecklistItem: (stageId: string, title: string) => void;
   setStageStatus: (stageId: string, status: Stage["status"]) => void;
   setStageNote: (stageId: string, note: string) => void;
-  confirmStagePayment: (stageId: string) => void;
+  confirmStagePayment: (stageId: string, amount: number) => void;
   toggleAskedQuestion: (stageId: string, questionId: string) => void;
 
   addJournalEntry: (e: Omit<JournalEntry, "id">) => void;
@@ -207,12 +208,25 @@ export const useAppStore = create<Store>()(
           ),
         }),
 
-      confirmStagePayment: (stageId) =>
+      confirmStagePayment: (stageId, amount) => {
+        const stage = get().stages.find((s) => s.id === stageId);
+        if (!stage) return;
         set({
           stages: get().stages.map((s) =>
             s.id === stageId ? { ...s, paymentConfirmed: true } : s
           ),
-        }),
+          expenses: [
+            {
+              id: uid("e"),
+              amount,
+              description: `Thanh toán đợt – ${stage.name}`,
+              category: expenseCategoryForStageOrder(stage.order),
+              date: new Date().toISOString().slice(0, 10),
+            },
+            ...get().expenses,
+          ],
+        });
+      },
 
       toggleAskedQuestion: (stageId, questionId) =>
         set({
