@@ -38,6 +38,7 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
   const tasks = useAppStore((s) => s.tasks);
   const documents = useAppStore((s) => s.documents);
   const materials = useAppStore((s) => s.materials);
+  const contacts = useAppStore((s) => s.contacts);
   const onboardingDone = useAppStore((s) => s.onboardingDone);
 
   const geminiApiKey = useGeminiKeyStore((s) => s.apiKey);
@@ -77,6 +78,7 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
         documents,
         materials,
         tasks,
+        contacts,
       });
 
       const res = await fetch("/api/assistant", {

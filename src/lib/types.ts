@@ -109,6 +109,22 @@ export interface Task {
   done: boolean;
 }
 
+export interface ContactReview {
+  id: string;
+  date: string; // ISO date
+  stageId?: string;
+  rating: number; // 1-5
+  note?: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  role: string; // vd: "Thầu chính", "Thợ điện nước", "Cung cấp gạch"
+  phone?: string;
+  reviews: ContactReview[];
+}
+
 export interface AppState {
   onboardingDone: boolean;
   homeProfile: HomeProfile | null;
@@ -118,4 +134,5 @@ export interface AppState {
   documents: DocumentRecord[];
   materials: Material[];
   tasks: Task[];
+  contacts: Contact[];
 }

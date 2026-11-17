@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import {
   AppState,
   ChecklistItem,
+  Contact,
+  ContactReview,
   DocumentRecord,
   Expense,
   HomeLocation,
@@ -15,6 +17,7 @@ import {
   Task,
 } from "./types";
 import {
+  mockContacts,
   mockDocuments,
   mockExpenses,
   mockHomeProfile,
@@ -62,6 +65,12 @@ interface Store extends AppState {
 
   addTask: (t: Omit<Task, "id" | "done">) => void;
   toggleTask: (id: string) => void;
+
+  addContact: (c: Omit<Contact, "id" | "reviews">) => void;
+  updateContact: (id: string, c: Partial<Omit<Contact, "id" | "reviews">>) => void;
+  deleteContact: (id: string) => void;
+  addContactReview: (contactId: string, review: Omit<ContactReview, "id">) => void;
+  deleteContactReview: (contactId: string, reviewId: string) => void;
 }
 
 const emptyState: AppState = {
@@ -73,6 +82,7 @@ const emptyState: AppState = {
   documents: [],
   materials: [],
   tasks: [],
+  contacts: [],
 };
 
 export const useAppStore = create<Store>()(
@@ -103,6 +113,7 @@ export const useAppStore = create<Store>()(
           documents: [],
           materials: [],
           tasks: [],
+          contacts: [],
         });
       },
 
@@ -116,6 +127,7 @@ export const useAppStore = create<Store>()(
           documents: mockDocuments,
           materials: mockMaterials,
           tasks: mockTasks,
+          contacts: mockContacts,
         });
       },
 
@@ -238,6 +250,32 @@ export const useAppStore = create<Store>()(
         set({
           tasks: get().tasks.map((t) =>
             t.id === id ? { ...t, done: !t.done } : t
+          ),
+        }),
+
+      addContact: (c) =>
+        set({ contacts: [{ ...c, id: uid("ct"), reviews: [] }, ...get().contacts] }),
+      updateContact: (id, patch) =>
+        set({
+          contacts: get().contacts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+        }),
+      deleteContact: (id) =>
+        set({ contacts: get().contacts.filter((c) => c.id !== id) }),
+
+      addContactReview: (contactId, review) =>
+        set({
+          contacts: get().contacts.map((c) =>
+            c.id === contactId
+              ? { ...c, reviews: [{ ...review, id: uid("rv") }, ...c.reviews] }
+              : c
+          ),
+        }),
+      deleteContactReview: (contactId, reviewId) =>
+        set({
+          contacts: get().contacts.map((c) =>
+            c.id === contactId
+              ? { ...c, reviews: c.reviews.filter((r) => r.id !== reviewId) }
+              : c
           ),
         }),
     }),

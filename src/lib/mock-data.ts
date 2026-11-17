@@ -1,4 +1,5 @@
 import {
+  Contact,
   DocumentRecord,
   Expense,
   HomeProfile,
@@ -243,4 +244,59 @@ export const mockTasks: Task[] = [
   { id: "t2", title: "Kiểm tra chống thấm WC", dueLabel: "Ngày mai", done: false },
   { id: "t3", title: "Thanh toán đợt tiếp theo cho thầu", dueLabel: "20/11/2026", done: false },
   { id: "t4", title: "Chọn màu sơn phòng ngủ", dueLabel: "25/11/2026", done: false },
+];
+
+export const mockContacts: Contact[] = [
+  {
+    id: "ct1",
+    name: "Anh Tuấn",
+    role: "Thầu chính",
+    phone: "0901 234 567",
+    reviews: [
+      {
+        id: "rv1",
+        date: "2026-08-15",
+        stageId: "s2",
+        rating: 5,
+        note: "Thi công móng đúng tiến độ, cẩn thận, nghiệm thu không có vấn đề gì.",
+      },
+      {
+        id: "rv2",
+        date: "2026-09-26",
+        stageId: "s3",
+        rating: 4,
+        note: "Chất lượng phần thô tốt, nhưng báo tiến độ qua điện thoại hơi chậm.",
+      },
+    ],
+  },
+  {
+    id: "ct2",
+    name: "Anh Minh",
+    role: "Thợ điện nước",
+    phone: "0912 345 678",
+    reviews: [
+      {
+        id: "rv3",
+        date: "2026-10-21",
+        stageId: "s4",
+        rating: 3,
+        note: "Làm xong đúng hạn nhưng có vài điểm đấu nối phải sửa lại sau khi kiểm tra.",
+      },
+    ],
+  },
+  {
+    id: "ct3",
+    name: "Chị Hoa",
+    role: "Cung cấp gạch - Viglacera",
+    phone: "0988 777 666",
+    reviews: [
+      {
+        id: "rv4",
+        date: "2026-11-12",
+        stageId: "s5",
+        rating: 5,
+        note: "Giao hàng đúng hẹn, gạch đúng mẫu đã chọn, đóng gói cẩn thận.",
+      },
+    ],
+  },
 ];
