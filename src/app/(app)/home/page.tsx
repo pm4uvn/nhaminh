@@ -25,7 +25,7 @@ export default function HomePage() {
       <DashboardHeader homeName={homeProfile?.name ?? "Nhà của tôi"} />
 
       <div className="px-5 space-y-4">
-        <ProgressCard stages={stages} />
+        <ProgressCard stages={stages} startDate={homeProfile?.startDate} />
         <WeatherCard />
         <BudgetSummary budget={homeProfile?.budget ?? 0} expenses={expenses} />
         <IssueBanner count={unresolvedIssues} />

@@ -51,6 +51,12 @@ export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function formatWeeksRemaining(weeks: number): string {
+  if (weeks <= 12) return `khoảng ${weeks} tuần`;
+  const months = Math.round(weeks / 4.345);
+  return `khoảng ${months} tháng`;
+}
+
 export function timeGreeting(): string {
   const h = new Date().getHours();
   if (h < 11) return "Chào buổi sáng! 👋";

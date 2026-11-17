@@ -40,6 +40,41 @@ export function stageProgress(stage: Stage): number {
   return Math.round((done / stage.checklist.length) * 100);
 }
 
+export type CompletionEstimateStatus = "ok" | "insufficient_data" | "completed";
+
+export interface CompletionEstimate {
+  status: CompletionEstimateStatus;
+  weeksRemaining?: number;
+  estimatedDate?: string; // ISO date
+}
+
+/**
+ * Ước tính ngày hoàn thành dựa trên tốc độ tiến độ trung bình từ ngày bắt đầu
+ * tới hiện tại, ngoại suy tới 100%. Không dựa trên lịch sử ngày của từng mốc
+ * (dữ liệu demo không lưu), nên cần ít nhất 7 ngày trôi qua và 3% tiến độ để
+ * tránh ngoại suy sai lệch khi vừa mới bắt đầu.
+ */
+export function estimateCompletion(stages: Stage[], startDate?: string): CompletionEstimate {
+  const progress = overallProgress(stages);
+  if (progress >= 100) return { status: "completed" };
+  if (!startDate) return { status: "insufficient_data" };
+
+  const start = new Date(startDate);
+  if (Number.isNaN(start.getTime())) return { status: "insufficient_data" };
+
+  const daysElapsed = Math.floor((Date.now() - start.getTime()) / 86_400_000);
+  if (daysElapsed < 7 || progress < 3) return { status: "insufficient_data" };
+
+  const pacePerDay = progress / daysElapsed;
+  const remainingDays = Math.round((100 - progress) / pacePerDay);
+  const weeksRemaining = Math.max(1, Math.round(remainingDays / 7));
+  const estimatedDate = new Date(Date.now() + remainingDays * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
+  return { status: "ok", weeksRemaining, estimatedDate };
+}
+
 export function expenseCategoryTotal(
   expenses: Expense[],
   category: Expense["category"]
