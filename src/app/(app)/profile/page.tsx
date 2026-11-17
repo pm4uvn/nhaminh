@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, FileText, Package, Users } from "lucide-react";
+import { Plus, FileText, Package, Users, Search } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +15,7 @@ import { MaterialDetailSheet } from "@/components/profile/MaterialDetailSheet";
 import { ContactCard } from "@/components/contacts/ContactCard";
 import { ContactFormSheet } from "@/components/contacts/ContactFormSheet";
 import { ContactDetailSheet } from "@/components/contacts/ContactDetailSheet";
+import { SupplierSearchSheet } from "@/components/profile/SupplierSearchSheet";
 import { useAppStore } from "@/lib/store";
 import { Contact, DocumentRecord, Material } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,8 @@ export default function ProfilePage() {
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [contactEditing, setContactEditing] = useState<Contact | undefined>(undefined);
   const [contactDetail, setContactDetail] = useState<Contact | null>(null);
+
+  const [supplierSearchOpen, setSupplierSearchOpen] = useState(false);
 
   return (
     <div className="pb-6">
@@ -82,6 +85,9 @@ export default function ProfilePage() {
               }}
             >
               <Plus size={18} /> Thêm vật liệu
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setSupplierSearchOpen(true)}>
+              <Search size={16} /> Tìm nhà cung cấp
             </Button>
             {materials.length === 0 ? (
               <Card className="p-4">
@@ -158,6 +164,8 @@ export default function ProfilePage() {
           setContactFormOpen(true);
         }}
       />
+
+      <SupplierSearchSheet open={supplierSearchOpen} onClose={() => setSupplierSearchOpen(false)} />
     </div>
   );
 }
