@@ -1,0 +1,12 @@
+{
+  "name": "Nhà Mình",
+  "short_name": "Nhà Mình",
+  "description": "Xây nhà an tâm, mọi thứ trong tầm tay.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F7F3",
+  "theme_color": "#286F65",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
