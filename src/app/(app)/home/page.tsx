@@ -12,6 +12,7 @@ import { BudgetPaceBanner } from "@/components/dashboard/BudgetPaceBanner";
 import { PaymentReminderBanner } from "@/components/dashboard/PaymentReminderBanner";
 import { LunarDateCard } from "@/components/calendar/LunarDateCard";
 import { AssistantEntryCard } from "@/components/assistant/AssistantEntryCard";
+import { MonthlyRecapEntryCard } from "@/components/recap/MonthlyRecapEntryCard";
 
 export default function HomePage() {
   const homeProfile = useAppStore((s) => s.homeProfile);
@@ -38,6 +39,7 @@ export default function HomePage() {
         <PaymentReminderBanner stages={stages} budget={homeProfile?.budget ?? 0} />
         <IssueBanner count={unresolvedIssues} />
         <TaskListCard tasks={tasks} />
+        <MonthlyRecapEntryCard />
 
         <div>
           <h2 className="text-[15px] font-semibold mb-2 px-1">Thao tác nhanh</h2>
