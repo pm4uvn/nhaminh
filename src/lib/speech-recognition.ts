@@ -2,11 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
 interface SpeechRecognitionResultLike {
-  [index: number]: { transcript: string };
+  readonly isFinal: boolean;
+  readonly length: number;
+  [index: number]: SpeechRecognitionAlternativeLike;
+}
+interface SpeechRecognitionResultListLike {
+  readonly length: number;
+  [index: number]: SpeechRecognitionResultLike;
 }
 interface SpeechRecognitionEventLike extends Event {
-  results: { [index: number]: SpeechRecognitionResultLike };
+  results: SpeechRecognitionResultListLike;
 }
 interface SpeechRecognitionInstance extends EventTarget {
   lang: string;
@@ -40,16 +49,22 @@ export function isSpeechRecognitionSupported(): boolean {
  * Nhận diện giọng nói tiếng Việt (Web Speech API) — chỉ chạy được trên các
  * trình duyệt hỗ trợ (Chrome/Edge trên desktop & Android); Safari/iOS và
  * Firefox hiện chưa hỗ trợ, khi đó `supported` sẽ là false.
+ *
+ * `onTranscript` được gọi liên tục khi đang nghe (isFinal=false, để người
+ * dùng thấy chữ hiện dần theo lời nói) và một lần cuối với isFinal=true —
+ * cố tình KHÔNG tự gửi câu hỏi, vì nhận diện giọng nói tiếng Việt đôi khi
+ * nghe sai (vd "chậm" thành "trồng"); để người dùng xem lại/sửa trước khi
+ * bấm gửi.
  */
-export function useSpeechRecognition(onFinalResult: (text: string) => void) {
+export function useSpeechRecognition(onTranscript: (text: string, isFinal: boolean) => void) {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const onFinalResultRef = useRef(onFinalResult);
+  const onTranscriptRef = useRef(onTranscript);
 
   useEffect(() => {
-    onFinalResultRef.current = onFinalResult;
-  }, [onFinalResult]);
+    onTranscriptRef.current = onTranscript;
+  }, [onTranscript]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- feature detection needs `window`, unavailable during SSR render
@@ -67,10 +82,24 @@ export function useSpeechRecognition(onFinalResult: (text: string) => void) {
     const recognition = new Ctor();
     recognition.lang = "vi-VN";
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript;
-      if (transcript) onFinalResultRef.current(transcript);
+      let finalText = "";
+      let interimText = "";
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript ?? "";
+        if (result.isFinal) {
+          finalText += transcript;
+        } else {
+          interimText += transcript;
+        }
+      }
+      if (finalText) {
+        onTranscriptRef.current(finalText, true);
+      } else if (interimText) {
+        onTranscriptRef.current(interimText, false);
+      }
     };
     recognition.onend = () => setListening(false);
     recognition.onerror = () => setListening(false);

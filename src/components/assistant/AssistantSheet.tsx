@@ -113,7 +113,7 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
   };
 
   const { supported: micSupported, listening, start: startListening, stop: stopListening } =
-    useSpeechRecognition(ask);
+    useSpeechRecognition((text) => setInput(text));
 
   return (
     <Sheet open={open} onClose={onClose} title="Trợ lý nhà bạn" className="sm:max-w-lg">
