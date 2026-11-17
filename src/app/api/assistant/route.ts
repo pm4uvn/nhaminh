@@ -16,21 +16,28 @@ DỮ LIỆU DỰ ÁN:
 `;
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { ok: false, code: "missing_key", message: "Chưa thiết lập GEMINI_API_KEY trên server." },
-      { status: 503 }
-    );
-  }
-
-  let body: { question?: string; context?: string };
+  let body: { question?: string; context?: string; apiKey?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json(
       { ok: false, code: "bad_request", message: "Yêu cầu không hợp lệ." },
       { status: 400 }
+    );
+  }
+
+  // Ưu tiên key người dùng tự nhập trong app (Cài đặt), nếu không có thì
+  // dùng GEMINI_API_KEY trên server (.env.local) — không bao giờ gửi key
+  // này về lại cho trình duyệt.
+  const apiKey = (body.apiKey ?? "").trim() || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "missing_key",
+        message: "Chưa có Gemini API key. Vào Cài đặt để thêm key nhé.",
+      },
+      { status: 503 }
     );
   }
 
@@ -69,6 +76,16 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Gemini API error:", res.status, errText);
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        return NextResponse.json(
+          {
+            ok: false,
+            code: "invalid_key",
+            message: "API key không hợp lệ hoặc đã bị từ chối. Kiểm tra lại key trong Cài đặt.",
+          },
+          { status: 502 }
+        );
+      }
       return NextResponse.json(
         {
           ok: false,

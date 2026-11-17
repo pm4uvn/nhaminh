@@ -12,6 +12,7 @@ import { notify } from "@/lib/toast";
 import { RotateCcw, Home, Info, BookOpenText, ChevronRight, MapPin } from "lucide-react";
 import { GlossaryListSheet } from "@/components/glossary/GlossaryListSheet";
 import { LocationPickerSheet } from "@/components/map/LocationPickerSheet";
+import { GeminiKeyCard } from "@/components/settings/GeminiKeyCard";
 
 const TYPE_LABEL: Record<string, string> = {
   new: "Xây nhà mới",
@@ -93,6 +94,8 @@ export default function SettingsPage() {
           </div>
           <ChevronRight size={18} className="text-text-secondary shrink-0" />
         </button>
+
+        <GeminiKeyCard />
 
         <Card className="p-4">
           <div className="flex items-start gap-3 mb-3">

@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useAppStore } from "@/lib/store";
+import { useGeminiKeyStore } from "@/lib/gemini-key-store";
 import { buildAssistantContext } from "@/lib/assistant-context";
-import { Bot, Send, User } from "lucide-react";
+import { Bot, Send, User, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -36,9 +38,12 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
   const materials = useAppStore((s) => s.materials);
   const onboardingDone = useAppStore((s) => s.onboardingDone);
 
+  const geminiApiKey = useGeminiKeyStore((s) => s.apiKey);
+
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsKey, setNeedsKey] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -69,13 +74,15 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, context }),
+        body: JSON.stringify({ question, context, apiKey: geminiApiKey }),
       });
       const data = await res.json();
 
       if (data.ok) {
+        setNeedsKey(false);
         setMessages((prev) => [...prev, { role: "assistant", text: data.answer }]);
       } else {
+        setNeedsKey(data.code === "missing_key" || data.code === "invalid_key");
         setMessages((prev) => [
           ...prev,
           { role: "assistant", text: data.message ?? "Có lỗi xảy ra.", isError: true },
@@ -131,6 +138,16 @@ export function AssistantSheet({ open, onClose }: { open: boolean; onClose: () =
             </div>
           )}
         </div>
+
+        {needsKey && (
+          <Link
+            href="/settings"
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-warning/10 text-warning font-medium text-sm py-2.5 mt-3"
+          >
+            <KeyRound size={15} /> Mở Cài đặt để thêm/sửa Gemini API key
+          </Link>
+        )}
 
         <div className="flex items-center gap-2 pt-3 border-t border-border mt-3">
           <input
