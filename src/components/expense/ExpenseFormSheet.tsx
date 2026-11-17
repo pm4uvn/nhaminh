@@ -7,11 +7,12 @@ import { FieldLabel, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { EXPENSE_CATEGORIES } from "@/lib/meta";
 import { useAppStore } from "@/lib/store";
+import { useGeminiKeyStore } from "@/lib/gemini-key-store";
 import { Expense, ExpenseCategory } from "@/lib/types";
 import { todayISO } from "@/lib/format";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { Paperclip } from "lucide-react";
+import { Paperclip, ScanLine } from "lucide-react";
 
 export function ExpenseFormSheet({
   open,
@@ -24,12 +25,14 @@ export function ExpenseFormSheet({
 }) {
   const addExpense = useAppStore((s) => s.addExpense);
   const updateExpense = useAppStore((s) => s.updateExpense);
+  const geminiApiKey = useGeminiKeyStore((s) => s.apiKey);
 
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("khac");
   const [date, setDate] = useState(todayISO());
   const [attachmentName, setAttachmentName] = useState<string | undefined>();
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -43,6 +46,39 @@ export function ExpenseFormSheet({
   }, [open, editing]);
 
   const canSave = amount > 0 && description.trim().length > 0;
+
+  const scanReceipt = async (file: File) => {
+    setAttachmentName(file.name);
+    setScanning(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const [, base64] = dataUrl.split(",");
+      const res = await fetch("/api/ocr-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: file.type, apiKey: geminiApiKey }),
+      });
+      const data = await res.json();
+      if (data.ok && typeof data.amount === "number") {
+        setAmount((prev) => (prev > 0 ? prev : data.amount));
+        if (data.description) {
+          setDescription((prev) => (prev.trim() ? prev : data.description));
+        }
+        notify.success("Đã tự động nhận diện số tiền từ hóa đơn — kiểm tra lại trước khi lưu nhé");
+      } else if (data.message) {
+        notify.info(data.message);
+      }
+    } catch {
+      notify.info("Không nhận diện được hóa đơn, bạn nhập tay giúp nhé.");
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const handleSave = () => {
     if (!canSave) return;
@@ -107,15 +143,27 @@ export function ExpenseFormSheet({
         <div>
           <FieldLabel optional>Đính kèm hóa đơn</FieldLabel>
           <label className="flex items-center gap-2 h-12 rounded-2xl bg-surface-2 border border-dashed border-border px-4 text-sm text-text-secondary cursor-pointer">
-            <Paperclip size={16} />
-            <span className="truncate">{attachmentName ?? "Chọn ảnh hóa đơn (demo)"}</span>
+            {scanning ? <ScanLine size={16} className="animate-pulse text-primary" /> : <Paperclip size={16} />}
+            <span className="truncate">
+              {scanning
+                ? "Đang nhận diện số tiền từ ảnh..."
+                : (attachmentName ?? "Chụp hoặc chọn ảnh hóa đơn")}
+            </span>
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               className="hidden"
-              onChange={(e) => setAttachmentName(e.target.files?.[0]?.name)}
+              disabled={scanning}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) scanReceipt(file);
+              }}
             />
           </label>
+          <p className="text-xs text-text-secondary mt-1.5">
+            Chụp hóa đơn, ứng dụng sẽ thử tự điền số tiền giúp bạn.
+          </p>
         </div>
 
         <Button className="w-full" size="lg" disabled={!canSave} onClick={handleSave}>
