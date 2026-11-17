@@ -10,6 +10,7 @@ import { QuickActionsRow } from "@/components/dashboard/QuickActionsRow";
 import { WeatherCard } from "@/components/weather/WeatherCard";
 import { BudgetPaceBanner } from "@/components/dashboard/BudgetPaceBanner";
 import { PaymentReminderBanner } from "@/components/dashboard/PaymentReminderBanner";
+import { LunarDateCard } from "@/components/calendar/LunarDateCard";
 
 export default function HomePage() {
   const homeProfile = useAppStore((s) => s.homeProfile);
@@ -27,6 +28,7 @@ export default function HomePage() {
       <DashboardHeader homeName={homeProfile?.name ?? "Nhà của tôi"} />
 
       <div className="px-5 space-y-4">
+        <LunarDateCard />
         <ProgressCard stages={stages} startDate={homeProfile?.startDate} />
         <WeatherCard />
         <BudgetSummary budget={homeProfile?.budget ?? 0} expenses={expenses} />
