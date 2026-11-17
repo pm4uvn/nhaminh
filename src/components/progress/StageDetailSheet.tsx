@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Plus, HelpCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Check, Plus, HelpCircle, ShieldAlert } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Input, FieldLabel, Textarea } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +11,7 @@ import { Stage, StageStatus } from "@/lib/types";
 import { stageProgress } from "@/lib/calculations";
 import { STAGE_STATUS_META } from "@/lib/meta";
 import { getStageQuestions } from "@/lib/stage-questions";
+import { matchCheckpointForChecklistTitle, CHECKPOINT_META } from "@/lib/checkpoints";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { TermText } from "@/components/glossary/TermText";
@@ -26,9 +28,15 @@ export function StageDetailSheet({
   const setStageStatus = useAppStore((s) => s.setStageStatus);
   const setStageNote = useAppStore((s) => s.setStageNote);
   const toggleAskedQuestion = useAppStore((s) => s.toggleAskedQuestion);
+  const evidenceRecords = useAppStore((s) => s.evidenceRecords);
 
   const [newItem, setNewItem] = useState("");
-  const [note, setNote] = useState(stage?.note ?? "");
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets to this stage's own note each time a different stage is opened
+    setNote(stage?.note ?? "");
+  }, [stage]);
 
   if (!stage) return null;
   const progress = stageProgress(stage);
@@ -94,44 +102,64 @@ export function StageDetailSheet({
         <div>
           <FieldLabel>Danh sách việc cần làm</FieldLabel>
           <div className="space-y-1">
-            {stage.checklist.map((item) => (
-              <div key={item.id} className="w-full flex items-center gap-3 py-2 text-left">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleChecklistItem(stage.id, item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleChecklistItem(stage.id, item.id);
-                    }
-                  }}
-                  className={cn(
-                    "h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors cursor-pointer",
-                    item.done ? "bg-success border-success text-white" : "border-border"
+            {stage.checklist.map((item) => {
+              const checkpoint = matchCheckpointForChecklistTitle(item.title);
+              const hasEvidence = checkpoint
+                ? evidenceRecords.some((e) => e.checkpointType === checkpoint)
+                : true;
+              const showWarning = checkpoint && !item.done && !hasEvidence;
+
+              return (
+                <div key={item.id}>
+                  <div className="w-full flex items-center gap-3 py-2 text-left">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleChecklistItem(stage.id, item.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleChecklistItem(stage.id, item.id);
+                        }
+                      }}
+                      className={cn(
+                        "h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors cursor-pointer",
+                        item.done ? "bg-success border-success text-white" : "border-border"
+                      )}
+                    >
+                      {item.done && <Check size={12} />}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleChecklistItem(stage.id, item.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleChecklistItem(stage.id, item.id);
+                        }
+                      }}
+                      className={cn(
+                        "text-[15px] flex-1 cursor-pointer",
+                        item.done && "line-through text-text-secondary"
+                      )}
+                    >
+                      <TermText text={item.title} />
+                    </span>
+                  </div>
+                  {showWarning && (
+                    <Link
+                      href="/evidence"
+                      className="flex items-center gap-1.5 ml-8 mb-1.5 text-xs text-terracotta font-medium"
+                    >
+                      <ShieldAlert size={13} />
+                      Chưa lưu ảnh &quot;{CHECKPOINT_META[checkpoint].label.toLowerCase()}&quot; —
+                      lưu trước khi che kín
+                    </Link>
                   )}
-                >
-                  {item.done && <Check size={12} />}
-                </span>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleChecklistItem(stage.id, item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleChecklistItem(stage.id, item.id);
-                    }
-                  }}
-                  className={cn(
-                    "text-[15px] flex-1 cursor-pointer",
-                    item.done && "line-through text-text-secondary"
-                  )}
-                >
-                  <TermText text={item.title} />
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex gap-2 mt-3">

@@ -6,6 +6,7 @@ import {
   Contact,
   ContactReview,
   DocumentRecord,
+  EvidenceRecord,
   Expense,
   HomeLocation,
   HomeProfile,
@@ -19,10 +20,12 @@ import {
 import {
   mockContacts,
   mockDocuments,
+  mockEvidenceRecords,
   mockExpenses,
   mockHomeProfile,
   mockJournal,
   mockMaterials,
+  mockRooms,
   mockStages,
   mockTasks,
 } from "./mock-data";
@@ -72,6 +75,11 @@ interface Store extends AppState {
   deleteContact: (id: string) => void;
   addContactReview: (contactId: string, review: Omit<ContactReview, "id">) => void;
   deleteContactReview: (contactId: string, reviewId: string) => void;
+
+  addRoom: (name: string) => void;
+  deleteRoom: (id: string) => void;
+  addEvidenceRecord: (e: Omit<EvidenceRecord, "id">) => void;
+  deleteEvidenceRecord: (id: string) => void;
 }
 
 const emptyState: AppState = {
@@ -84,6 +92,8 @@ const emptyState: AppState = {
   materials: [],
   tasks: [],
   contacts: [],
+  rooms: [],
+  evidenceRecords: [],
 };
 
 export const useAppStore = create<Store>()(
@@ -115,6 +125,8 @@ export const useAppStore = create<Store>()(
           materials: [],
           tasks: [],
           contacts: [],
+          rooms: [],
+          evidenceRecords: [],
         });
       },
 
@@ -129,6 +141,8 @@ export const useAppStore = create<Store>()(
           materials: mockMaterials,
           tasks: mockTasks,
           contacts: mockContacts,
+          rooms: mockRooms,
+          evidenceRecords: mockEvidenceRecords,
         });
       },
 
@@ -291,6 +305,21 @@ export const useAppStore = create<Store>()(
               : c
           ),
         }),
+
+      addRoom: (name) =>
+        set({ rooms: [...get().rooms, { id: uid("room"), name }] }),
+      deleteRoom: (id) =>
+        set({
+          rooms: get().rooms.filter((r) => r.id !== id),
+          evidenceRecords: get().evidenceRecords.filter((e) => e.roomId !== id),
+        }),
+
+      addEvidenceRecord: (e) =>
+        set({
+          evidenceRecords: [{ ...e, id: uid("ev") }, ...get().evidenceRecords],
+        }),
+      deleteEvidenceRecord: (id) =>
+        set({ evidenceRecords: get().evidenceRecords.filter((e) => e.id !== id) }),
     }),
     {
       name: "nha-minh-store",

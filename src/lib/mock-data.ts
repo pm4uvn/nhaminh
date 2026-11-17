@@ -1,10 +1,12 @@
 import {
   Contact,
   DocumentRecord,
+  EvidenceRecord,
   Expense,
   HomeProfile,
   JournalEntry,
   Material,
+  Room,
   Stage,
   Task,
 } from "./types";
@@ -297,6 +299,38 @@ export const mockContacts: Contact[] = [
         rating: 5,
         note: "Giao hàng đúng hẹn, gạch đúng mẫu đã chọn, đóng gói cẩn thận.",
       },
+    ],
+  },
+];
+
+export const mockRooms: Room[] = [
+  { id: "room1", name: "Phòng bếp" },
+  { id: "room2", name: "Phòng ngủ chính" },
+  { id: "room3", name: "WC tầng 1" },
+];
+
+export const mockEvidenceRecords: EvidenceRecord[] = [
+  {
+    id: "ev1",
+    roomId: "room1",
+    checkpointType: "before_plaster",
+    photoSeed: "dien",
+    date: "2026-10-12",
+    confirmedBy: "Anh Minh (thợ điện nước)",
+    pins: [
+      { id: "p1", x: 30, y: 45, label: "Đường cấp nước lạnh", note: "Cách góc trái 40cm, cao 60cm" },
+      { id: "p2", x: 65, y: 30, label: "Ổ cắm bếp từ", note: "Cao 110cm so với sàn" },
+    ],
+  },
+  {
+    id: "ev2",
+    roomId: "room3",
+    checkpointType: "before_tiling",
+    photoSeed: "leak",
+    date: "2026-11-05",
+    confirmedBy: "Anh Tuấn (thầu chính)",
+    pins: [
+      { id: "p3", x: 50, y: 60, label: "Hố ga thoát sàn", note: "Chính giữa khu tắm đứng" },
     ],
   },
 ];

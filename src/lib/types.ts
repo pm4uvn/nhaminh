@@ -127,6 +127,37 @@ export interface Contact {
   reviews: ContactReview[];
 }
 
+/** Các mốc "sắp bị che kín" cần lưu bằng chứng trước khi thi công tiếp */
+export type CheckpointType =
+  | "before_concrete"
+  | "before_plaster"
+  | "before_ceiling"
+  | "before_tiling";
+
+export interface PhotoPin {
+  id: string;
+  x: number; // % từ trái, 0-100
+  y: number; // % từ trên, 0-100
+  label: string;
+  note?: string; // vd kích thước, khoảng cách tới mốc cố định
+}
+
+export interface Room {
+  id: string;
+  name: string;
+}
+
+export interface EvidenceRecord {
+  id: string;
+  roomId: string;
+  checkpointType: CheckpointType;
+  photoUrl?: string;
+  photoSeed?: string; // dùng khi chưa có ảnh thật (demo)
+  pins: PhotoPin[];
+  date: string; // ISO date
+  confirmedBy?: string;
+}
+
 export interface AppState {
   onboardingDone: boolean;
   homeProfile: HomeProfile | null;
@@ -137,4 +168,6 @@ export interface AppState {
   materials: Material[];
   tasks: Task[];
   contacts: Contact[];
+  rooms: Room[];
+  evidenceRecords: EvidenceRecord[];
 }

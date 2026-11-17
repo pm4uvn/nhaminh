@@ -13,6 +13,7 @@ import { PaymentReminderBanner } from "@/components/dashboard/PaymentReminderBan
 import { LunarDateCard } from "@/components/calendar/LunarDateCard";
 import { AssistantEntryCard } from "@/components/assistant/AssistantEntryCard";
 import { MonthlyRecapEntryCard } from "@/components/recap/MonthlyRecapEntryCard";
+import { EvidenceEntryCard } from "@/components/evidence/EvidenceEntryCard";
 
 export default function HomePage() {
   const homeProfile = useAppStore((s) => s.homeProfile);
@@ -20,6 +21,7 @@ export default function HomePage() {
   const expenses = useAppStore((s) => s.expenses);
   const tasks = useAppStore((s) => s.tasks);
   const journal = useAppStore((s) => s.journal);
+  const evidenceRecords = useAppStore((s) => s.evidenceRecords);
 
   const unresolvedIssues = journal.filter(
     (j) => j.isIssue && j.issueStatus !== "resolved"
@@ -33,6 +35,7 @@ export default function HomePage() {
         <AssistantEntryCard />
         <LunarDateCard />
         <ProgressCard stages={stages} startDate={homeProfile?.startDate} />
+        <EvidenceEntryCard count={evidenceRecords.reduce((sum, e) => sum + e.pins.length, 0)} />
         <WeatherCard />
         <BudgetSummary budget={homeProfile?.budget ?? 0} expenses={expenses} />
         <BudgetPaceBanner stages={stages} budget={homeProfile?.budget ?? 0} expenses={expenses} />

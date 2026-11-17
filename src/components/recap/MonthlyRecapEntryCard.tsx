@@ -16,6 +16,8 @@ export function MonthlyRecapEntryCard() {
   const materials = useAppStore((s) => s.materials);
   const tasks = useAppStore((s) => s.tasks);
   const contacts = useAppStore((s) => s.contacts);
+  const rooms = useAppStore((s) => s.rooms);
+  const evidenceRecords = useAppStore((s) => s.evidenceRecords);
   const onboardingDone = useAppStore((s) => s.onboardingDone);
 
   const [open, setOpen] = useState(false);
@@ -32,8 +34,22 @@ export function MonthlyRecapEntryCard() {
         materials,
         tasks,
         contacts,
+        rooms,
+        evidenceRecords,
       }),
-    [onboardingDone, homeProfile, stages, expenses, journal, documents, materials, tasks, contacts]
+    [
+      onboardingDone,
+      homeProfile,
+      stages,
+      expenses,
+      journal,
+      documents,
+      materials,
+      tasks,
+      contacts,
+      rooms,
+      evidenceRecords,
+    ]
   );
 
   return (

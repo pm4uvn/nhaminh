@@ -15,6 +15,8 @@ export function ShareProgressButton() {
   const materials = useAppStore((s) => s.materials);
   const tasks = useAppStore((s) => s.tasks);
   const contacts = useAppStore((s) => s.contacts);
+  const rooms = useAppStore((s) => s.rooms);
+  const evidenceRecords = useAppStore((s) => s.evidenceRecords);
   const onboardingDone = useAppStore((s) => s.onboardingDone);
 
   const [busy, setBusy] = useState(false);
@@ -33,6 +35,8 @@ export function ShareProgressButton() {
         materials,
         tasks,
         contacts,
+        rooms,
+        evidenceRecords,
       });
       const encoded = encodeShareSnapshot(snapshot);
       const url = `${window.location.origin}/share/${encoded}`;
