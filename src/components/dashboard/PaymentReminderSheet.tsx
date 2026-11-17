@@ -1,0 +1,71 @@
+"use client";
+
+import { Sheet } from "@/components/ui/Sheet";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { useAppStore } from "@/lib/store";
+import { PaymentReminder } from "@/lib/payment-schedule";
+import { formatCurrency } from "@/lib/format";
+import { notify } from "@/lib/toast";
+import { Check } from "lucide-react";
+
+export function PaymentReminderSheet({
+  open,
+  onClose,
+  reminders,
+}: {
+  open: boolean;
+  onClose: () => void;
+  reminders: PaymentReminder[];
+}) {
+  const confirmStagePayment = useAppStore((s) => s.confirmStagePayment);
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Nhắc thanh toán theo giai đoạn">
+      <div className="pt-1 space-y-4">
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Dựa trên lịch thanh toán phổ biến theo từng giai đoạn thi công — không phải ngày cố
+          định — để bạn chủ động chuẩn bị, không bị thầu báo gấp.
+        </p>
+
+        <div className="space-y-3">
+          {reminders.map((r) => (
+            <div key={r.stage.id} className="rounded-2xl border border-border p-4">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <p className="font-medium text-[15px]">{r.stage.name}</p>
+                <Badge tone={r.kind === "due" ? "warning" : "primary"}>
+                  {r.kind === "due" ? "Đã hoàn thành" : "Sắp hoàn thành"}
+                </Badge>
+              </div>
+              <p className="text-sm text-text-secondary mb-2">{r.label}</p>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-text-secondary">
+                  Khoảng {r.percentage}% hợp đồng
+                </span>
+                <span className="text-[15px] font-semibold tabular-nums">
+                  ~{formatCurrency(r.amount)}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  confirmStagePayment(r.stage.id);
+                  notify.success("Đã xác nhận thanh toán đợt này");
+                }}
+              >
+                <Check size={15} /> Đã thanh toán đợt này
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-xs text-text-secondary leading-relaxed">
+          Số tiền chỉ mang tính tham khảo dựa trên % hợp đồng thường gặp, có thể khác với hợp
+          đồng thực tế của bạn.
+        </p>
+      </div>
+    </Sheet>
+  );
+}

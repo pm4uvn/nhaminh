@@ -53,6 +53,8 @@ export interface Stage {
   endDate?: string;
   note?: string;
   checklist: ChecklistItem[];
+  /** Người dùng đã xác nhận thanh toán đợt gắn với giai đoạn này */
+  paymentConfirmed?: boolean;
 }
 
 export type JournalEntryType = "update" | "note" | "issue" | "decision";

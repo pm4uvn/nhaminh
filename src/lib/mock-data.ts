@@ -50,6 +50,7 @@ export const mockStages: Stage[] = [
       { id: "s1c1", title: "Xin phép xây dựng", done: true },
       { id: "s1c2", title: "Dọn dẹp mặt bằng", done: true },
     ],
+    paymentConfirmed: true,
   },
   {
     id: "s2",
@@ -64,6 +65,7 @@ export const mockStages: Stage[] = [
       { id: "s2c2", title: "Đổ bê tông móng", done: true },
       { id: "s2c3", title: "Nghiệm thu móng", done: true },
     ],
+    paymentConfirmed: true,
   },
   {
     id: "s3",
@@ -79,6 +81,7 @@ export const mockStages: Stage[] = [
       { id: "s3c3", title: "Lắp đà, cột", done: true },
       { id: "s3c4", title: "Cán nền", done: true },
     ],
+    paymentConfirmed: true,
   },
   {
     id: "s4",
@@ -93,6 +96,7 @@ export const mockStages: Stage[] = [
       { id: "s4c2", title: "Lắp đường ống nước", done: true },
       { id: "s4c3", title: "Kiểm tra hệ thống điện nước", done: true },
     ],
+    paymentConfirmed: true,
   },
   {
     id: "s5",

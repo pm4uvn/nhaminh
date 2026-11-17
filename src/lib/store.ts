@@ -47,6 +47,7 @@ interface Store extends AppState {
   addChecklistItem: (stageId: string, title: string) => void;
   setStageStatus: (stageId: string, status: Stage["status"]) => void;
   setStageNote: (stageId: string, note: string) => void;
+  confirmStagePayment: (stageId: string) => void;
 
   addJournalEntry: (e: Omit<JournalEntry, "id">) => void;
   setIssueStatus: (id: string, status: IssueStatus, note?: string) => void;
@@ -96,6 +97,7 @@ export const useAppStore = create<Store>()(
             ...s,
             status: s.order === 1 ? "doing" : "todo",
             checklist: s.checklist.map((c) => ({ ...c, done: false })),
+            paymentConfirmed: false,
           })),
           journal: [],
           documents: [],
@@ -175,6 +177,13 @@ export const useAppStore = create<Store>()(
         set({
           stages: get().stages.map((s) =>
             s.id === stageId ? { ...s, note } : s
+          ),
+        }),
+
+      confirmStagePayment: (stageId) =>
+        set({
+          stages: get().stages.map((s) =>
+            s.id === stageId ? { ...s, paymentConfirmed: true } : s
           ),
         }),
 
