@@ -11,6 +11,7 @@ import { stageProgress } from "@/lib/calculations";
 import { STAGE_STATUS_META } from "@/lib/meta";
 import { notify } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { TermText } from "@/components/glossary/TermText";
 
 export function StageDetailSheet({
   stage,
@@ -36,7 +37,12 @@ export function StageDetailSheet({
   return (
     <Sheet open={!!stage} onClose={onClose} title={stage.name}>
       <div className="pt-1 space-y-5">
-        <p className="text-sm text-text-secondary">{stage.description}</p>
+        <p className="text-sm text-text-secondary">
+          <TermText text={stage.description} />
+        </p>
+        <p className="text-xs text-text-secondary -mt-3">
+          Chạm vào từ gạch chân để xem giải nghĩa.
+        </p>
 
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -85,28 +91,42 @@ export function StageDetailSheet({
           <FieldLabel>Danh sách việc cần làm</FieldLabel>
           <div className="space-y-1">
             {stage.checklist.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => toggleChecklistItem(stage.id, item.id)}
-                className="w-full flex items-center gap-3 py-2 text-left"
-              >
+              <div key={item.id} className="w-full flex items-center gap-3 py-2 text-left">
                 <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleChecklistItem(stage.id, item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleChecklistItem(stage.id, item.id);
+                    }
+                  }}
                   className={cn(
-                    "h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors",
+                    "h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors cursor-pointer",
                     item.done ? "bg-success border-success text-white" : "border-border"
                   )}
                 >
                   {item.done && <Check size={12} />}
                 </span>
                 <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleChecklistItem(stage.id, item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleChecklistItem(stage.id, item.id);
+                    }
+                  }}
                   className={cn(
-                    "text-[15px]",
+                    "text-[15px] flex-1 cursor-pointer",
                     item.done && "line-through text-text-secondary"
                   )}
                 >
-                  {item.title}
+                  <TermText text={item.title} />
                 </span>
-              </button>
+              </div>
             ))}
           </div>
 

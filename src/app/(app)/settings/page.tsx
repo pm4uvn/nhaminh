@@ -9,7 +9,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppStore } from "@/lib/store";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { notify } from "@/lib/toast";
-import { RotateCcw, Home, Info } from "lucide-react";
+import { RotateCcw, Home, Info, BookOpenText, ChevronRight } from "lucide-react";
+import { GlossaryListSheet } from "@/components/glossary/GlossaryListSheet";
 
 const TYPE_LABEL: Record<string, string> = {
   new: "Xây nhà mới",
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const resetDemo = useAppStore((s) => s.resetDemo);
   const loadDemo = useAppStore((s) => s.loadDemo);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   return (
     <div className="pb-6">
@@ -56,6 +58,20 @@ export default function SettingsPage() {
             )}
           </div>
         </Card>
+
+        <button
+          onClick={() => setGlossaryOpen(true)}
+          className="w-full flex items-center gap-3 bg-surface border border-border rounded-2xl p-4 text-left"
+        >
+          <div className="h-11 w-11 rounded-2xl bg-primary-light text-primary-dark flex items-center justify-center shrink-0">
+            <BookOpenText size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[15px]">Từ điển xây nhà</p>
+            <p className="text-xs text-text-secondary">Giải nghĩa thuật ngữ xây dựng dễ hiểu</p>
+          </div>
+          <ChevronRight size={18} className="text-text-secondary shrink-0" />
+        </button>
 
         <Card className="p-4">
           <div className="flex items-start gap-3 mb-3">
@@ -95,6 +111,8 @@ export default function SettingsPage() {
           router.replace("/onboarding");
         }}
       />
+
+      <GlossaryListSheet open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
     </div>
   );
 }
