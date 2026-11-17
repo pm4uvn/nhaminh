@@ -75,6 +75,65 @@ export function estimateCompletion(stages: Stage[], startDate?: string): Complet
   return { status: "ok", weeksRemaining, estimatedDate };
 }
 
+export type BudgetPaceLevel = "ok" | "insufficient_data" | "ahead_spending" | "over_budget";
+
+export interface BudgetPace {
+  level: BudgetPaceLevel;
+  progress: number; // % tiến độ thi công
+  spentPercent: number; // % ngân sách đã chi, không giới hạn ở 100 (để phát hiện vượt)
+  gap: number; // spentPercent - progress, điểm phần trăm
+  projectedTotal?: number; // tổng chi phí ước tính nếu giữ nguyên tốc độ tới khi hoàn thành
+  projectedOverrun?: number; // projectedTotal - budget (âm nghĩa là vẫn trong ngân sách)
+}
+
+const AHEAD_GAP_THRESHOLD = 15; // điểm phần trăm
+const PROJECTED_OVERRUN_THRESHOLD_RATIO = 0.05; // 5% ngân sách
+
+/**
+ * So sánh % ngân sách đã chi với % tiến độ thi công để phát hiện sớm nguy cơ
+ * vượt ngân sách. Cần tiến độ tối thiểu 5% để tránh báo động giả ở giai đoạn
+ * đầu, khi các khoản cọc (đất, vật liệu, nội thất...) thường được trả trước
+ * khi tiến độ thi công vật lý chưa thể hiện rõ.
+ */
+export function budgetPace(stages: Stage[], budget: number, expenses: Expense[]): BudgetPace {
+  const progress = overallProgress(stages);
+  const paid = totalPaid(expenses);
+
+  if (budget <= 0) {
+    return { level: "insufficient_data", progress, spentPercent: 0, gap: 0 };
+  }
+
+  const spentPercent = (paid / budget) * 100;
+
+  if (progress < 5) {
+    return {
+      level: "insufficient_data",
+      progress,
+      spentPercent,
+      gap: spentPercent - progress,
+    };
+  }
+
+  const projectedTotal = paid / (progress / 100);
+  const projectedOverrun = projectedTotal - budget;
+  const gap = spentPercent - progress;
+
+  if (spentPercent >= 100) {
+    return { level: "over_budget", progress, spentPercent, gap, projectedTotal, projectedOverrun };
+  }
+  if (gap >= AHEAD_GAP_THRESHOLD || projectedOverrun > budget * PROJECTED_OVERRUN_THRESHOLD_RATIO) {
+    return {
+      level: "ahead_spending",
+      progress,
+      spentPercent,
+      gap,
+      projectedTotal,
+      projectedOverrun,
+    };
+  }
+  return { level: "ok", progress, spentPercent, gap, projectedTotal, projectedOverrun };
+}
+
 export function expenseCategoryTotal(
   expenses: Expense[],
   category: Expense["category"]

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ExpenseListItem } from "@/components/expense/ExpenseListItem";
 import { ExpenseFormSheet } from "@/components/expense/ExpenseFormSheet";
 import { ExpenseDetailSheet } from "@/components/expense/ExpenseDetailSheet";
+import { BudgetPaceBanner } from "@/components/dashboard/BudgetPaceBanner";
 import { useAppStore } from "@/lib/store";
 import { formatCurrency } from "@/lib/format";
 import { budgetUtilization, remainingBudget, totalPaid } from "@/lib/calculations";
@@ -21,6 +22,7 @@ import { Wallet } from "lucide-react";
 export default function ExpensesPage() {
   const homeProfile = useAppStore((s) => s.homeProfile);
   const expenses = useAppStore((s) => s.expenses);
+  const stages = useAppStore((s) => s.stages);
 
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">("all");
@@ -64,6 +66,8 @@ export default function ExpensesPage() {
           </div>
           <ProgressBar value={utilization} barClassName={utilization >= 90 ? "bg-warning" : "bg-primary"} />
         </Card>
+
+        <BudgetPaceBanner stages={stages} budget={budget} expenses={expenses} />
 
         <Button className="w-full" size="lg" onClick={() => { setEditing(undefined); setFormOpen(true); }}>
           <Plus size={18} /> Thêm khoản chi

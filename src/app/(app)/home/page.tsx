@@ -8,6 +8,7 @@ import { TaskListCard } from "@/components/dashboard/TaskListCard";
 import { IssueBanner } from "@/components/dashboard/IssueBanner";
 import { QuickActionsRow } from "@/components/dashboard/QuickActionsRow";
 import { WeatherCard } from "@/components/weather/WeatherCard";
+import { BudgetPaceBanner } from "@/components/dashboard/BudgetPaceBanner";
 
 export default function HomePage() {
   const homeProfile = useAppStore((s) => s.homeProfile);
@@ -28,6 +29,7 @@ export default function HomePage() {
         <ProgressCard stages={stages} startDate={homeProfile?.startDate} />
         <WeatherCard />
         <BudgetSummary budget={homeProfile?.budget ?? 0} expenses={expenses} />
+        <BudgetPaceBanner stages={stages} budget={homeProfile?.budget ?? 0} expenses={expenses} />
         <IssueBanner count={unresolvedIssues} />
         <TaskListCard tasks={tasks} />
 
