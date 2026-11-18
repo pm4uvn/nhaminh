@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
+import { callGeminiWithFallback, extractGeminiText } from "@/lib/gemini-client";
 
-const GEMINI_MODEL = "gemini-flash-lite-latest";
+// Google Search grounding tính phí/hạn mức riêng theo tài khoản (billing),
+// không theo quota riêng từng model như chat/OCR thường — nên chỉ thử 2
+// model thay vì toàn bộ chuỗi, tránh lặp vô ích khi 429 là do billing.
+const SEARCH_MODEL_CHAIN = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 const MAX_QUERY_LENGTH = 200;
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 5 * 60 * 1000;
@@ -73,35 +77,28 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+    const result = await callGeminiWithFallback(
+      apiKey,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
+        contents: [{ role: "user", parts: [{ text: PROMPT_TEMPLATE(query) }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1000,
         },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: PROMPT_TEMPLATE(query) }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1000,
-          },
-        }),
-      }
+      },
+      SEARCH_MODEL_CHAIN
     );
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Find-suppliers Gemini error:", res.status, errText);
-      if (res.status === 400 || res.status === 401 || res.status === 403) {
+    if (!result.ok) {
+      console.error("Find-suppliers Gemini error:", result.status, result.errorText);
+      if (result.status === 400 || result.status === 401 || result.status === 403) {
         return NextResponse.json(
           { ok: false, code: "invalid_key", message: "API key không hợp lệ. Kiểm tra lại trong Cài đặt." },
           { status: 502 }
         );
       }
-      if (res.status === 429) {
+      if (result.status === 429) {
         return NextResponse.json(
           {
             ok: false,
@@ -118,11 +115,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await res.json();
-    const text: string | undefined = data?.candidates?.[0]?.content?.parts
-      ?.map((p: { text?: string }) => p.text)
-      .filter(Boolean)
-      .join("");
+    const text = extractGeminiText(result.data);
     const results = text ? extractJsonArray(text) : null;
 
     if (!results) {

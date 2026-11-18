@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
+import { callGeminiWithFallback, extractGeminiText } from "@/lib/gemini-client";
 
-const GEMINI_MODEL = "gemini-flash-lite-latest";
 const MAX_IMAGE_BASE64_LENGTH = 6_000_000; // ~4.5MB ảnh gốc, đủ cho ảnh chụp hóa đơn
 const RATE_LIMIT = 10; // lượt / cửa sổ — ảnh tốn chi phí hơn câu hỏi text
 const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 phút
@@ -64,44 +64,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: PROMPT },
-                { inline_data: { mime_type: mimeType, data: imageBase64 } },
-              ],
-            },
+    const result = await callGeminiWithFallback(apiKey, {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: PROMPT },
+            { inline_data: { mime_type: mimeType, data: imageBase64 } },
           ],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 200,
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
+        },
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 200,
+        responseMimeType: "application/json",
+      },
+    });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("OCR Gemini error:", res.status, errText);
+    if (!result.ok) {
+      console.error("OCR Gemini error:", result.status, result.errorText);
       return NextResponse.json(
         { ok: false, message: "Không nhận diện được hóa đơn lúc này." },
         { status: 502 }
       );
     }
 
-    const data = await res.json();
-    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = extractGeminiText(result.data);
     const parsed = text ? extractJson(text) : null;
 
     if (!parsed || parsed.amount === null) {

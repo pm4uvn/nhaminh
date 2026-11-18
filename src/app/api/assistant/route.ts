@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientKey } from "@/lib/rate-limit";
+import { callGeminiWithFallback, extractGeminiText } from "@/lib/gemini-client";
 
-const GEMINI_MODEL = "gemini-flash-lite-latest";
 const MAX_QUESTION_LENGTH = 500;
 const RATE_LIMIT = 20; // lượt / cửa sổ
 const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 phút
@@ -67,31 +67,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT_HEADER + context }],
-          },
-          contents: [{ role: "user", parts: [{ text: question }] }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 400,
-          },
-        }),
-      }
-    );
+    const result = await callGeminiWithFallback(apiKey, {
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT_HEADER + context }],
+      },
+      contents: [{ role: "user", parts: [{ text: question }] }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 400,
+      },
+    });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Gemini API error:", res.status, errText);
-      if (res.status === 400 || res.status === 401 || res.status === 403) {
+    if (!result.ok) {
+      console.error("Gemini API error:", result.status, result.errorText);
+      if (result.status === 400 || result.status === 401 || result.status === 403) {
         return NextResponse.json(
           {
             ok: false,
@@ -111,11 +100,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await res.json();
-    const answer: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const answer = extractGeminiText(result.data);
 
     if (!answer) {
-      const blockReason = data?.promptFeedback?.blockReason;
+      const blockReason = result.data.promptFeedback?.blockReason;
       return NextResponse.json(
         {
           ok: false,
